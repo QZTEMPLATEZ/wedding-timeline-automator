@@ -3,7 +3,7 @@ import React from 'react';
 import { VideoFile, SceneMatch } from '@/lib/types';
 import SplitViewComparison from '@/components/SplitViewComparison';
 import Dropzone from '@/components/Dropzone';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { FolderCheck } from 'lucide-react';
 
 interface MainContentProps {
@@ -27,6 +27,15 @@ export const MainContent: React.FC<MainContentProps> = ({
   handleNextScene,
   handleFilesAdded
 }) => {
+  const navigate = useNavigate();
+  
+  const handleRawVideosAdded = (files: VideoFile[]) => {
+    handleFilesAdded(files, 'raw');
+    if (files.length > 0) {
+      navigate('/organizacao');
+    }
+  };
+
   return (
     <div className="lg:col-span-2 flex flex-col gap-6">
       {/* Split View Comparison */}
@@ -73,7 +82,7 @@ export const MainContent: React.FC<MainContentProps> = ({
         
         <div className="flex flex-col gap-4">
           <Dropzone
-            onFilesAdded={(files) => handleFilesAdded(files, 'raw')}
+            onFilesAdded={handleRawVideosAdded}
             type="raw"
             label="Organizar Vídeos"
             multiple={true}
