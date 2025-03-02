@@ -6,6 +6,7 @@ export interface VideoFile {
   type: 'raw' | 'reference';
   duration?: number;
   preview?: string;
+  category?: VideoCategory; // Add category property
 }
 
 export interface SceneMatch {
@@ -16,8 +17,10 @@ export interface SceneMatch {
   rawVideoStart: number; // Start time in raw video (seconds)
   rawVideoEnd: number; // End time in raw video (seconds)
   similarityScore: number; // 0-1 score of how similar the scenes are
-  sceneType: 'making_of_bride' | 'making_of_groom' | 'ceremony' | 'decoration' | 'party' | 'unknown';
+  sceneType: VideoCategory;
 }
+
+export type VideoCategory = 'making_of_bride' | 'making_of_groom' | 'ceremony' | 'decoration' | 'party' | 'unknown';
 
 export interface ProcessingProgress {
   stage: 'idle' | 'analyzing' | 'matching' | 'building' | 'exporting' | 'completed' | 'error';

@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { VideoFile, SceneMatch, ProcessingProgress } from '@/lib/types';
+import { VideoFile, SceneMatch, ProcessingProgress, VideoCategory } from '@/lib/types';
 import { toast } from "sonner";
 
 export const useVideos = () => {
@@ -29,11 +29,20 @@ export const useVideos = () => {
     }
   };
   
+  // Set categories for raw videos
+  const setRawVideosCategories = (videoId: string, category: VideoCategory) => {
+    setRawVideos(prevVideos => 
+      prevVideos.map(video => 
+        video.id === videoId ? { ...video, category } : video
+      )
+    );
+  };
+  
   // Generate mock scene matches when videos are loaded
   useEffect(() => {
     if (referenceVideo && rawVideos.length > 0 && processingProgress.stage === 'completed') {
       // This is just simulated data - in a real app this would come from the analysis process
-      const mockSceneTypes: SceneMatch['sceneType'][] = [
+      const mockSceneTypes: VideoCategory[] = [
         'making_of_bride', 'making_of_groom', 'ceremony', 'decoration', 'party'
       ];
       
@@ -47,6 +56,7 @@ export const useVideos = () => {
         const sceneDuration = Math.random() * 15 + 5; // 5-20 seconds
         const randomRawVideo = rawVideos[Math.floor(Math.random() * rawVideos.length)];
         const rawVideoStart = Math.random() * 30; // Random start time in raw video
+        const sceneType = randomRawVideo.category || mockSceneTypes[Math.floor(Math.random() * mockSceneTypes.length)];
         
         newMatches.push({
           id: `match-${i}`,
@@ -56,7 +66,7 @@ export const useVideos = () => {
           rawVideoStart: rawVideoStart,
           rawVideoEnd: rawVideoStart + sceneDuration,
           similarityScore: Math.random() * 0.3 + 0.7, // 0.7-1.0 similarity score
-          sceneType: mockSceneTypes[Math.floor(Math.random() * mockSceneTypes.length)]
+          sceneType
         });
         
         currentTime += sceneDuration;
@@ -88,6 +98,7 @@ export const useVideos = () => {
     setProcessingProgress,
     handleFilesAdded,
     handleNextScene,
-    handlePrevScene
+    handlePrevScene,
+    setRawVideosCategories
   };
 };
