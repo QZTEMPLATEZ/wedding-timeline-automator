@@ -4,7 +4,7 @@ import Layout from '@/components/Layout';
 import MainContent from '@/components/MainContent';
 import SidebarContent from '@/components/SidebarContent';
 import { useVideos } from '@/hooks/useVideos';
-import { ProcessingManager } from '@/components/ProcessingManager';
+import { useProcessingManager } from '@/components/ProcessingManager';
 
 const Index: React.FC = () => {
   // Get video state and handlers from hooks
@@ -20,8 +20,8 @@ const Index: React.FC = () => {
     handlePrevScene
   } = useVideos();
   
-  // Get processing handlers
-  const { handleStartProcessing, handleExport } = ProcessingManager({
+  // Get processing handlers from the custom hook
+  const { handleStartProcessing, handleExport } = useProcessingManager({
     processingProgress,
     setProcessingProgress,
     sceneMatches,

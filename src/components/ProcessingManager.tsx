@@ -1,5 +1,4 @@
 
-import React from 'react';
 import { ProcessingProgress, SceneMatch, ExportFormat } from '@/lib/types';
 import { toast } from "sonner";
 
@@ -11,13 +10,14 @@ interface ProcessingManagerProps {
   rawVideosExist: boolean;
 }
 
-export const ProcessingManager: React.FC<ProcessingManagerProps> = ({
+// Change to a custom hook (useProcessingManager) instead of a React component
+export const useProcessingManager = ({
   processingProgress,
   setProcessingProgress,
   sceneMatches,
   referenceVideoExists,
   rawVideosExist
-}) => {
+}: ProcessingManagerProps) => {
   // Handle simulated analysis and export process
   const handleStartProcessing = () => {
     if (!referenceVideoExists || !rawVideosExist) {
@@ -90,4 +90,4 @@ export const ProcessingManager: React.FC<ProcessingManagerProps> = ({
   return { handleStartProcessing, handleExport };
 };
 
-export default ProcessingManager;
+export default useProcessingManager;
