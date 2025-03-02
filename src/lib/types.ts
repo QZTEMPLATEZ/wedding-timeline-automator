@@ -26,3 +26,12 @@ export interface ProcessingProgress {
 }
 
 export type ExportFormat = 'xml' | 'edl' | 'fcpxml';
+
+// Add TimelineSegment interface to fix build error
+export interface TimelineSegment {
+  id: string;
+  start: number;
+  end: number;
+  type: string;
+  color?: string;
+}
