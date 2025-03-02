@@ -75,18 +75,10 @@ export const MainContent: React.FC<MainContentProps> = ({
           <Dropzone
             onFilesAdded={(files) => handleFilesAdded(files, 'raw')}
             type="raw"
-            label="Vídeos Brutos"
+            label="Organizar Vídeos"
             multiple={true}
             files={rawVideos}
           />
-          
-          <Link 
-            to="/organizacao" 
-            className="flex items-center justify-center gap-2 text-sm p-2 rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-          >
-            <FolderCheck className="w-4 h-4" />
-            <span>Organizar Vídeos por Categoria</span>
-          </Link>
         </div>
       </div>
     </div>
