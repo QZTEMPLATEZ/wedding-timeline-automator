@@ -2,11 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import Dropzone from '@/components/Dropzone';
-import Timeline from '@/components/Timeline';
-import VideoPlayer from '@/components/VideoPlayer';
+import SplitViewComparison from '@/components/SplitViewComparison';
 import ProcessingIndicator from '@/components/ProcessingIndicator';
 import ExportOptions from '@/components/ExportOptions';
-import { VideoFile, ProcessingProgress, TimelineSegment, ExportFormat } from '@/lib/types';
+import { VideoFile, ProcessingProgress, SceneMatch, ExportFormat } from '@/lib/types';
 import { toast } from "sonner";
 
 const Index: React.FC = () => {
@@ -14,13 +13,9 @@ const Index: React.FC = () => {
   const [rawVideos, setRawVideos] = useState<VideoFile[]>([]);
   const [referenceVideo, setReferenceVideo] = useState<VideoFile | null>(null);
   
-  // Player state
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
-  
-  // Timeline segments - these would be generated from analysis in a real app
-  const [timelineSegments, setTimelineSegments] = useState<TimelineSegment[]>([]);
+  // Matching state
+  const [sceneMatches, setSceneMatches] = useState<SceneMatch[]>([]);
+  const [currentMatchIndex, setCurrentMatchIndex] = useState(0);
   
   // Processing state
   const [processingProgress, setProcessingProgress] = useState<ProcessingProgress>({
@@ -32,51 +27,97 @@ const Index: React.FC = () => {
   const handleFilesAdded = (files: VideoFile[], type: 'raw' | 'reference') => {
     if (type === 'reference') {
       setReferenceVideo(files[0]);
-      toast.success(`Reference video "${files[0].name}" loaded successfully`);
+      toast.success(`Vídeo referência "${files[0].name}" carregado com sucesso`);
     } else {
       setRawVideos((prevVideos) => [...prevVideos, ...files]);
-      toast.success(`${files.length} raw video${files.length > 1 ? 's' : ''} loaded successfully`);
+      toast.success(`${files.length} vídeo${files.length > 1 ? 's' : ''} bruto${files.length > 1 ? 's' : ''} carregado${files.length > 1 ? 's' : ''} com sucesso`);
     }
   };
   
-  // Handle seeking in the timeline
-  const handleSeek = (time: number) => {
-    setCurrentTime(time);
+  // Generate mock scene matches when videos are loaded
+  useEffect(() => {
+    if (referenceVideo && rawVideos.length > 0 && processingProgress.stage === 'completed') {
+      // This is just simulated data - in a real app this would come from the analysis process
+      const mockSceneTypes: SceneMatch['sceneType'][] = [
+        'making_of_bride', 'making_of_groom', 'ceremony', 'decoration', 'party'
+      ];
+      
+      const newMatches: SceneMatch[] = [];
+      let currentTime = 0;
+      
+      // Generate 8-12 random scene matches
+      const numScenes = Math.floor(Math.random() * 5) + 8; // 8-12 scenes
+      
+      for (let i = 0; i < numScenes; i++) {
+        const sceneDuration = Math.random() * 15 + 5; // 5-20 seconds
+        const randomRawVideo = rawVideos[Math.floor(Math.random() * rawVideos.length)];
+        const rawVideoStart = Math.random() * 30; // Random start time in raw video
+        
+        newMatches.push({
+          id: `match-${i}`,
+          referenceStart: currentTime,
+          referenceEnd: currentTime + sceneDuration,
+          rawVideoId: randomRawVideo.id,
+          rawVideoStart: rawVideoStart,
+          rawVideoEnd: rawVideoStart + sceneDuration,
+          similarityScore: Math.random() * 0.3 + 0.7, // 0.7-1.0 similarity score
+          sceneType: mockSceneTypes[Math.floor(Math.random() * mockSceneTypes.length)]
+        });
+        
+        currentTime += sceneDuration;
+      }
+      
+      setSceneMatches(newMatches);
+    }
+  }, [referenceVideo, rawVideos, processingProgress.stage]);
+  
+  // Handle scene navigation
+  const handleNextScene = () => {
+    if (sceneMatches.length > 0) {
+      setCurrentMatchIndex((prev) => (prev + 1) % sceneMatches.length);
+    }
   };
   
-  // Handle play/pause
-  const handlePlayPause = () => {
-    setIsPlaying((prev) => !prev);
+  const handlePrevScene = () => {
+    if (sceneMatches.length > 0) {
+      setCurrentMatchIndex((prev) => (prev - 1 + sceneMatches.length) % sceneMatches.length);
+    }
   };
   
-  // Handle simulated export process
-  const handleExport = (format: ExportFormat) => {
+  // Handle simulated analysis and export process
+  const handleStartProcessing = () => {
+    if (!referenceVideo || rawVideos.length === 0) {
+      toast.error('Por favor, adicione um vídeo referência e pelo menos um vídeo bruto');
+      return;
+    }
+    
+    setSceneMatches([]);
     setProcessingProgress({
       stage: 'analyzing',
       progress: 0,
-      message: 'Analyzing reference video...'
+      message: 'Analisando vídeo referência...'
     });
     
     // Simulate processing stages with timeouts
     setTimeout(() => {
       setProcessingProgress({
         stage: 'matching',
-        progress: 25,
-        message: 'Matching scenes with raw footage...'
+        progress: 30,
+        message: 'Identificando cenas e classificando por tipo...'
       });
       
       setTimeout(() => {
         setProcessingProgress({
           stage: 'building',
-          progress: 60,
-          message: 'Building timeline structure...'
+          progress: 65,
+          message: 'Encontrando correspondências nas imagens brutas...'
         });
         
         setTimeout(() => {
           setProcessingProgress({
             stage: 'exporting',
-            progress: 85,
-            message: `Generating ${format.toUpperCase()} file...`
+            progress: 90,
+            message: 'Finalizando substituições e preparando visualização...'
           });
           
           setTimeout(() => {
@@ -85,78 +126,67 @@ const Index: React.FC = () => {
               progress: 100
             });
             
-            toast.success(`Timeline exported as ${format.toUpperCase()} successfully`);
+            toast.success('Análise e correspondência de cenas concluídas com sucesso');
           }, 1500);
         }, 2000);
       }, 2000);
     }, 2000);
   };
   
-  // Generate mock timeline segments when a reference video is loaded
-  useEffect(() => {
-    if (referenceVideo && duration > 0) {
-      // Create random segments for demonstration
-      const segments: TimelineSegment[] = [];
-      let currentPosition = 0;
-      
-      while (currentPosition < duration) {
-        const segmentDuration = Math.random() * 20 + 3; // Random duration between 3-23 seconds
-        
-        if (currentPosition + segmentDuration > duration) {
-          // Last segment
-          segments.push({
-            id: `segment-${segments.length}`,
-            start: currentPosition,
-            end: duration,
-            sourceId: referenceVideo.id,
-            type: 'scene'
-          });
-          break;
-        }
-        
-        segments.push({
-          id: `segment-${segments.length}`,
-          start: currentPosition,
-          end: currentPosition + segmentDuration,
-          sourceId: referenceVideo.id,
-          type: 'scene'
-        });
-        
-        currentPosition += segmentDuration;
-      }
-      
-      setTimelineSegments(segments);
+  // Handle export
+  const handleExport = (format: ExportFormat) => {
+    if (sceneMatches.length === 0) {
+      toast.error('Nenhuma correspondência de cena disponível para exportar');
+      return;
     }
-  }, [referenceVideo, duration]);
+    
+    // Simulate export download
+    toast.success(`Timeline exportada como ${format.toUpperCase()} com sucesso`);
+    
+    // In a real app, this would generate and download the export file
+    setTimeout(() => {
+      const a = document.createElement('a');
+      a.href = '#';
+      a.download = `wedding_edit_${new Date().getTime()}.${format}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }, 500);
+  };
   
   return (
     <Layout>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 flex flex-col gap-6">
-          {/* Video player section */}
+          {/* Split View Comparison */}
           <div className="glass-morphism rounded-lg p-4">
-            <h2 className="text-sm font-medium mb-3">Preview</h2>
-            <VideoPlayer
-              src={referenceVideo?.path}
-              currentTime={currentTime}
-              isPlaying={isPlaying}
-              onTimeUpdate={setCurrentTime}
-              onDurationChange={setDuration}
-              className="aspect-video"
+            <h2 className="text-sm font-medium mb-3">Visualização de Cenas</h2>
+            <SplitViewComparison
+              referenceVideo={referenceVideo}
+              rawVideos={rawVideos}
+              currentMatch={sceneMatches.length > 0 ? sceneMatches[currentMatchIndex] : null}
+              className="mb-3"
             />
             
-            {/* Timeline */}
-            {referenceVideo && duration > 0 && (
-              <Timeline
-                segments={timelineSegments}
-                duration={duration}
-                currentTime={currentTime}
-                onSeek={handleSeek}
-                isPlaying={isPlaying}
-                onPlayPause={handlePlayPause}
-                className="mt-4"
-                videos={referenceVideo ? [referenceVideo, ...rawVideos] : rawVideos}
-              />
+            {/* Scene navigation controls */}
+            {sceneMatches.length > 0 && (
+              <div className="flex items-center justify-between">
+                <button
+                  className="text-xs px-3 py-1.5 rounded-md bg-secondary hover:bg-secondary/70 transition-colors"
+                  onClick={handlePrevScene}
+                >
+                  Cena Anterior
+                </button>
+                <span className="text-xs text-muted-foreground">
+                  Cena {currentMatchIndex + 1} de {sceneMatches.length}
+                </span>
+                <button
+                  className="text-xs px-3 py-1.5 rounded-md bg-secondary hover:bg-secondary/70 transition-colors"
+                  onClick={handleNextScene}
+                >
+                  Próxima Cena
+                </button>
+              </div>
             )}
           </div>
           
@@ -165,7 +195,7 @@ const Index: React.FC = () => {
             <Dropzone
               onFilesAdded={(files) => handleFilesAdded(files, 'reference')}
               type="reference"
-              label="Reference Video"
+              label="Vídeo Referência"
               multiple={false}
               files={referenceVideo ? [referenceVideo] : []}
             />
@@ -173,7 +203,7 @@ const Index: React.FC = () => {
             <Dropzone
               onFilesAdded={(files) => handleFilesAdded(files, 'raw')}
               type="raw"
-              label="Raw Footage"
+              label="Vídeos Brutos"
               multiple={true}
               files={rawVideos}
             />
@@ -186,19 +216,36 @@ const Index: React.FC = () => {
             progress={processingProgress}
           />
           
+          {/* Process button */}
+          <div className="neo-blur rounded-lg p-4">
+            <h3 className="text-sm font-medium mb-3">Processamento</h3>
+            <button
+              type="button"
+              disabled={!referenceVideo || rawVideos.length === 0 || processingProgress.stage !== 'idle' && processingProgress.stage !== 'completed'}
+              className="w-full py-2.5 px-4 rounded-md transition-all bg-primary text-primary-foreground hover:bg-primary/90 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mb-3"
+              onClick={handleStartProcessing}
+            >
+              <span>Iniciar Análise Automática</span>
+            </button>
+            <p className="text-xs text-muted-foreground">
+              Analisa o vídeo referência e encontra correspondências nos vídeos brutos com base na similaridade visual.
+            </p>
+          </div>
+          
           <ExportOptions
             onExport={handleExport}
-            disabled={!referenceVideo || rawVideos.length === 0 || processingProgress.stage !== 'idle' && processingProgress.stage !== 'completed'}
+            disabled={sceneMatches.length === 0}
           />
           
           {/* Instructions */}
           <div className="neo-blur rounded-lg p-4">
-            <h3 className="text-sm font-medium mb-2">How it works</h3>
+            <h3 className="text-sm font-medium mb-2">Como Funciona</h3>
             <ol className="text-xs text-muted-foreground space-y-3 list-decimal pl-4">
-              <li>Upload a <span className="text-foreground">reference video</span> - an already edited wedding video</li>
-              <li>Add your <span className="text-foreground">raw footage</span> that you want to use for a new edit</li>
-              <li>Click <span className="text-foreground">Export Timeline</span> to analyze the reference and create a new edit with your footage</li>
-              <li>Import the generated file into your preferred editing software</li>
+              <li>Faça upload de um <span className="text-foreground">vídeo referência</span> - um vídeo de casamento já editado</li>
+              <li>Adicione seus <span className="text-foreground">vídeos brutos</span> que deseja usar para uma nova edição</li>
+              <li>Clique em <span className="text-foreground">Iniciar Análise Automática</span> para analisar o vídeo referência e criar uma nova edição com suas imagens</li>
+              <li>Revise as correspondências de cenas geradas pela IA</li>
+              <li>Exporte o arquivo para importar no seu software de edição preferido</li>
             </ol>
           </div>
         </div>

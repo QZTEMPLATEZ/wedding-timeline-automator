@@ -21,23 +21,23 @@ export const ExportOptions: React.FC<ExportOptionsProps> = ({
     { 
       value: 'xml', 
       label: 'Premiere Pro XML', 
-      description: 'Compatible with Adobe Premiere Pro' 
+      description: 'Compatível com Adobe Premiere Pro' 
     },
     { 
       value: 'edl', 
       label: 'EDL', 
-      description: 'Compatible with most editing software' 
+      description: 'Compatível com a maioria dos softwares de edição' 
     },
     { 
       value: 'fcpxml', 
       label: 'Final Cut Pro XML', 
-      description: 'Compatible with Apple Final Cut Pro' 
+      description: 'Compatível com Apple Final Cut Pro' 
     }
   ];
   
   return (
     <div className={cn("neo-blur rounded-lg p-4", className)}>
-      <h3 className="text-sm font-medium mb-3">Export Format</h3>
+      <h3 className="text-sm font-medium mb-3">Formato de Exportação</h3>
       
       <div className="space-y-2 mb-4">
         {formats.map((format) => (
@@ -86,7 +86,7 @@ export const ExportOptions: React.FC<ExportOptionsProps> = ({
         onClick={() => onExport(selectedFormat)}
       >
         <Download className="w-4 h-4" />
-        <span>Export Timeline</span>
+        <span>Exportar Timeline</span>
       </button>
     </div>
   );

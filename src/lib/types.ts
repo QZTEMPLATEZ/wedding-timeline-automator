@@ -8,12 +8,15 @@ export interface VideoFile {
   preview?: string;
 }
 
-export interface TimelineSegment {
+export interface SceneMatch {
   id: string;
-  start: number; // Start time in seconds
-  end: number; // End time in seconds
-  sourceId: string; // Reference to the source video ID
-  type: 'scene' | 'transition';
+  referenceStart: number; // Start time in reference video (seconds)
+  referenceEnd: number; // End time in reference video (seconds)
+  rawVideoId: string; // ID of the matching raw video
+  rawVideoStart: number; // Start time in raw video (seconds)
+  rawVideoEnd: number; // End time in raw video (seconds)
+  similarityScore: number; // 0-1 score of how similar the scenes are
+  sceneType: 'making_of_bride' | 'making_of_groom' | 'ceremony' | 'decoration' | 'party' | 'unknown';
 }
 
 export interface ProcessingProgress {

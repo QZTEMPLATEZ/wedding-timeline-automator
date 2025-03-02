@@ -21,10 +21,10 @@ export const Layout: React.FC<LayoutProps> = ({
         
         <div className="flex items-center gap-4">
           <button className="text-muted-foreground hover:text-foreground transition-colors text-sm">
-            Help
+            Ajuda
           </button>
           <button className="text-muted-foreground hover:text-foreground transition-colors text-sm">
-            Settings
+            Configurações
           </button>
         </div>
       </header>
