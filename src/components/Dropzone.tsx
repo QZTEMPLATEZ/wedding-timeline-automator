@@ -1,7 +1,7 @@
 
 import React, { useState, useCallback } from 'react';
 import { cn } from '@/lib/utils';
-import { Upload, FileVideo, Plus, File } from 'lucide-react';
+import { Upload, FileVideo, Plus, File, AlertCircle } from 'lucide-react';
 import { VideoFile } from '@/lib/types';
 
 interface DropzoneProps {
@@ -24,6 +24,7 @@ export const Dropzone: React.FC<DropzoneProps> = ({
   files = []
 }) => {
   const [isDragging, setIsDragging] = useState(false);
+  const [isProcessingLargeFile, setIsProcessingLargeFile] = useState(false);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -39,12 +40,22 @@ export const Dropzone: React.FC<DropzoneProps> = ({
     setIsDragging(false);
 
     const droppedFiles = Array.from(e.dataTransfer.files);
-    const videoFiles: VideoFile[] = droppedFiles.map(file => ({
-      id: Math.random().toString(36).substring(2, 9),
-      name: file.name,
-      path: URL.createObjectURL(file),
-      type: type,
-    }));
+    const videoFiles: VideoFile[] = droppedFiles.map(file => {
+      const isLargeFile = file.size > 1000000000; // > 1GB
+      
+      if (isLargeFile) {
+        setIsProcessingLargeFile(true);
+        setTimeout(() => setIsProcessingLargeFile(false), 1000);
+      }
+      
+      return {
+        id: Math.random().toString(36).substring(2, 9),
+        name: file.name,
+        path: URL.createObjectURL(file),
+        type: type,
+        size: file.size
+      };
+    });
 
     onFilesAdded(videoFiles, type);
   }, [onFilesAdded, type]);
@@ -52,16 +63,35 @@ export const Dropzone: React.FC<DropzoneProps> = ({
   const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const selectedFiles = Array.from(e.target.files);
-      const videoFiles: VideoFile[] = selectedFiles.map(file => ({
-        id: Math.random().toString(36).substring(2, 9),
-        name: file.name,
-        path: URL.createObjectURL(file),
-        type: type,
-      }));
+      const videoFiles: VideoFile[] = selectedFiles.map(file => {
+        const isLargeFile = file.size > 1000000000; // > 1GB
+        
+        if (isLargeFile) {
+          setIsProcessingLargeFile(true);
+          setTimeout(() => setIsProcessingLargeFile(false), 1000);
+        }
+        
+        return {
+          id: Math.random().toString(36).substring(2, 9),
+          name: file.name,
+          path: URL.createObjectURL(file),
+          type: type,
+          size: file.size
+        };
+      });
 
       onFilesAdded(videoFiles, type);
     }
   }, [onFilesAdded, type]);
+
+  // Format file size
+  const formatFileSize = (bytes?: number): string => {
+    if (!bytes) return "Desconhecido";
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    if (bytes === 0) return '0 Byte';
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+    return Math.round(bytes / Math.pow(1024, i)) + ' ' + sizes[i];
+  };
 
   return (
     <div className={cn("flex flex-col", className)}>
@@ -89,15 +119,22 @@ export const Dropzone: React.FC<DropzoneProps> = ({
                 )}
               </div>
               <p className="text-sm mb-1 font-medium">{label}</p>
-              <p className="text-xs text-muted-foreground mb-2">Drag and drop files here or click to browse</p>
-              <span className="text-xs px-3 py-1 rounded-full bg-secondary text-secondary-foreground">
-                {type === 'reference' ? '1 video max' : 'Multiple videos'}
-              </span>
+              <p className="text-xs text-muted-foreground mb-2">Arraste arquivos ou clique para escolher</p>
+              <div className="flex flex-col gap-2">
+                <span className="text-xs px-3 py-1 rounded-full bg-secondary text-secondary-foreground">
+                  {type === 'reference' ? '1 vídeo máx' : 'Múltiplos vídeos'}
+                </span>
+                
+                <div className="flex items-center gap-1 text-xs text-amber-600">
+                  <AlertCircle className="w-3 h-3" />
+                  <span>Arquivos grandes (+1GB) serão processados por partes</span>
+                </div>
+              </div>
             </>
           ) : (
             <div className="w-full">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-medium">{files.length} file{files.length > 1 ? 's' : ''} selected</h3>
+                <h3 className="text-sm font-medium">{files.length} arquivo{files.length > 1 ? 's' : ''} selecionado{files.length > 1 ? 's' : ''}</h3>
                 <button
                   type="button"
                   className="text-xs flex items-center gap-1 text-primary hover:text-primary/80 transition-colors"
@@ -108,7 +145,7 @@ export const Dropzone: React.FC<DropzoneProps> = ({
                   }}
                 >
                   <Plus className="w-3 h-3" />
-                  Add more
+                  Adicionar mais
                 </button>
               </div>
               <div className="space-y-2 max-h-36 overflow-y-auto pr-2">
@@ -119,9 +156,21 @@ export const Dropzone: React.FC<DropzoneProps> = ({
                   >
                     <File className="w-3 h-3 text-muted-foreground" />
                     <span className="truncate flex-1">{file.name}</span>
+                    {file.size && (
+                      <span className="text-xs text-muted-foreground">
+                        {formatFileSize(file.size)}
+                      </span>
+                    )}
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+          
+          {isProcessingLargeFile && (
+            <div className="mt-3 text-xs text-amber-600 flex items-center gap-1.5">
+              <AlertCircle className="w-3 h-3 animate-pulse" />
+              <span>Preparando arquivo grande para processamento...</span>
             </div>
           )}
         </div>

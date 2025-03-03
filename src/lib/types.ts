@@ -6,7 +6,8 @@ export interface VideoFile {
   type: 'raw' | 'reference';
   duration?: number;
   preview?: string;
-  category?: VideoCategory; // Add category property
+  category?: VideoCategory; 
+  size?: number; // Add size property for handling large files
 }
 
 export interface SceneMatch {

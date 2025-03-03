@@ -18,7 +18,10 @@ const Index: React.FC = () => {
     setProcessingProgress,
     handleFilesAdded,
     handleNextScene,
-    handlePrevScene
+    handlePrevScene,
+    uploadProgress,
+    isUploading,
+    cancelUpload
   } = useVideos();
   
   // Get processing handlers from the custom hook
@@ -38,7 +41,8 @@ const Index: React.FC = () => {
   
   // Calculate disabled states
   const disableProcessing = !referenceVideo || rawVideos.length === 0 || 
-    (processingProgress.stage !== 'idle' && processingProgress.stage !== 'completed');
+    (processingProgress.stage !== 'idle' && processingProgress.stage !== 'completed') ||
+    isUploading;
   const disableExport = sceneMatches.length === 0;
   
   return (
@@ -53,6 +57,9 @@ const Index: React.FC = () => {
           handlePrevScene={handlePrevScene}
           handleNextScene={handleNextScene}
           handleFilesAdded={handleFilesAdded}
+          uploadProgress={uploadProgress}
+          isUploading={isUploading}
+          cancelUpload={cancelUpload}
         />
         
         <SidebarContent 
