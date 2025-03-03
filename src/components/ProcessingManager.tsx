@@ -1,5 +1,5 @@
 
-import { ProcessingProgress, SceneMatch, ExportFormat, VideoFile } from '@/lib/types';
+import { ProcessingProgress, SceneMatch, ExportFormat, VideoFile, VideoCategory } from '@/lib/types';
 import { toast } from "sonner";
 import * as onnx from 'onnxruntime-web';
 import { FFmpeg } from '@ffmpeg/ffmpeg';
