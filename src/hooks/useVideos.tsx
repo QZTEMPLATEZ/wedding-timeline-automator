@@ -37,44 +37,6 @@ export const useVideos = () => {
       )
     );
   };
-  
-  // Generate mock scene matches when videos are loaded
-  useEffect(() => {
-    if (referenceVideo && rawVideos.length > 0 && processingProgress.stage === 'completed') {
-      // This is just simulated data - in a real app this would come from the analysis process
-      const mockSceneTypes: VideoCategory[] = [
-        'making_of_bride', 'making_of_groom', 'ceremony', 'decoration', 'party'
-      ];
-      
-      const newMatches: SceneMatch[] = [];
-      let currentTime = 0;
-      
-      // Generate 8-12 random scene matches
-      const numScenes = Math.floor(Math.random() * 5) + 8; // 8-12 scenes
-      
-      for (let i = 0; i < numScenes; i++) {
-        const sceneDuration = Math.random() * 15 + 5; // 5-20 seconds
-        const randomRawVideo = rawVideos[Math.floor(Math.random() * rawVideos.length)];
-        const rawVideoStart = Math.random() * 30; // Random start time in raw video
-        const sceneType = randomRawVideo.category || mockSceneTypes[Math.floor(Math.random() * mockSceneTypes.length)];
-        
-        newMatches.push({
-          id: `match-${i}`,
-          referenceStart: currentTime,
-          referenceEnd: currentTime + sceneDuration,
-          rawVideoId: randomRawVideo.id,
-          rawVideoStart: rawVideoStart,
-          rawVideoEnd: rawVideoStart + sceneDuration,
-          similarityScore: Math.random() * 0.3 + 0.7, // 0.7-1.0 similarity score
-          sceneType
-        });
-        
-        currentTime += sceneDuration;
-      }
-      
-      setSceneMatches(newMatches);
-    }
-  }, [referenceVideo, rawVideos, processingProgress.stage]);
 
   // Scene navigation handlers
   const handleNextScene = () => {
@@ -93,6 +55,7 @@ export const useVideos = () => {
     rawVideos,
     referenceVideo,
     sceneMatches,
+    setSceneMatches,
     currentMatchIndex,
     processingProgress,
     setProcessingProgress,

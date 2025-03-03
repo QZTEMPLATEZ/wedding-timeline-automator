@@ -12,6 +12,7 @@ const Index: React.FC = () => {
     rawVideos,
     referenceVideo,
     sceneMatches,
+    setSceneMatches,
     currentMatchIndex,
     processingProgress,
     setProcessingProgress,
@@ -25,8 +26,11 @@ const Index: React.FC = () => {
     processingProgress,
     setProcessingProgress,
     sceneMatches,
+    setSceneMatches,
     referenceVideoExists: !!referenceVideo,
-    rawVideosExist: rawVideos.length > 0
+    rawVideosExist: rawVideos.length > 0,
+    referenceVideo,
+    rawVideos
   });
   
   // Calculate current match
